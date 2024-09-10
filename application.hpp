@@ -1,5 +1,4 @@
-#ifndef APPLICATION_HPP
-#define APPLICATION_HPP
+#pragma once
 
 #include <csignal>
 #include <thread>
@@ -41,5 +40,3 @@ private:
     // Method to set log level based on a string
     void setLogLevel(const std::string& logLevel);
 };
-
-#endif  // APPLICATION_HPP

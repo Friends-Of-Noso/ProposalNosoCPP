@@ -1,6 +1,11 @@
 #include "application.hpp"
 #include <cstring>  // For strcmp
 
+// Platform-specific includes
+#ifdef _WIN32
+#include <windows.h>  // Windows API for console control handling
+#endif
+
 // Initialize the static instance pointer to nullptr
 Application* Application::instance = nullptr;
 
@@ -9,6 +14,25 @@ Application::Application() {
     // Register signal handlers for SIGINT and SIGTERM
     std::signal(SIGINT, Application::signalHandler);
     std::signal(SIGTERM, Application::signalHandler);
+#ifdef _WIN32
+    // Register a console control handler on Windows
+    SetConsoleCtrlHandler([](DWORD event) -> BOOL {
+        switch (event) {
+            case CTRL_C_EVENT:  // CTRL-C pressed
+            case CTRL_BREAK_EVENT:  // CTRL-Break pressed
+            case CTRL_CLOSE_EVENT:  // Console window is closed
+            case CTRL_LOGOFF_EVENT:  // User logs off
+            case CTRL_SHUTDOWN_EVENT:  // System shutting down
+                spdlog::info("Windows console event received. Shutting down gracefully...");
+                if (Application::instance != nullptr) {
+                    Application::instance->shutdown();
+                }
+                return TRUE;
+            default:
+                return FALSE;
+        }
+    }, TRUE);
+#endif
 }
 
 // Method to get the singleton instance

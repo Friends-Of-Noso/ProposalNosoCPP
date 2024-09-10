@@ -1,21 +1,19 @@
-# Minimum CMake version required
 cmake_minimum_required(VERSION 3.10)
+project(MyApplication)
 
-# Project name and version
-project(nosod VERSION 1.0)
-
-# Specify the C++ standard
-set(CMAKE_CXX_STANDARD 11)
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Find and include the spdlog package
+# Add executable target
+add_executable(nosod nosod.cpp application.cpp)
+
+# Find and link spdlog
 find_package(spdlog REQUIRED)
-
-# Add the executable
-add_executable(nosod
-    nosod.cpp
-    application.cpp
-)
-
-# Link the spdlog library
 target_link_libraries(nosod PRIVATE spdlog::spdlog)
+
+# Find and link inih
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(INIH REQUIRED inih)
+include_directories(${INIH_INCLUDE_DIRS})
+target_link_libraries(nosod PRIVATE ${INIH_LIBRARIES})

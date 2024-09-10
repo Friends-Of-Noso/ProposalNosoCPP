@@ -34,6 +34,8 @@ private:
     // Static signal handler function
     static void signalHandler(int signal);
 
+    // Make iniHandler a static method
+    static int iniHandler(void* user, const char* section, const char* name, const char* value);
     // Static pointer to hold the singleton instance
     static Application* instance;
 

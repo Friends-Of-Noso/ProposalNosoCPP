@@ -1,5 +1,6 @@
 #include "application.hpp"
 #include <cstring>  // For strcmp
+#include <ini.h>  // Include inih header
 
 // Platform-specific includes
 #ifdef _WIN32
@@ -11,10 +12,11 @@ Application* Application::instance = nullptr;
 
 // Private constructor
 Application::Application() {
+#ifndef _WIN32
     // Register signal handlers for SIGINT and SIGTERM
     std::signal(SIGINT, Application::signalHandler);
     std::signal(SIGTERM, Application::signalHandler);
-#ifdef _WIN32
+#else
     // Register a console control handler on Windows
     SetConsoleCtrlHandler([](DWORD event) -> BOOL {
         switch (event) {
@@ -73,6 +75,27 @@ void Application::signalHandler(int signal) {
     }
 }
 
+// INI handler function
+ int Application::iniHandler(void* user, const char* section, const char* name, const char* value) {
+    Application* app = static_cast<Application*>(user);
+
+    if (strcmp(section, "Logging") == 0 && strcmp(name, "log_level") == 0) {
+        app->setLogLevel(value);
+    } else if (strcmp(section, "Noso") == 0) {
+        if (strcmp(name, "run_mode") == 0) {
+            spdlog::info("Run mode set to: {}", value);
+            // Store the run_mode in your application state if needed
+        } else if (strcmp(name, "max_connections") == 0) {
+            int maxCon = std::atoi(value);
+            spdlog::info("Max connections set to: {}", maxCon);
+            // Store max_connections in your application state if needed
+        }
+    }
+
+    return 1;
+}
+
+
 // Method to initialize the application with command-line arguments
 void Application::initialise(int argc, char* argv[]) {
     std::string logLevel = "info"; // Default log level
@@ -89,8 +112,13 @@ void Application::initialise(int argc, char* argv[]) {
     // Set the log level for spdlog
     setLogLevel(logLevel);
 
-    // Here you can place the code to read from a config file
-}
+    // Load the config file using inih
+    const char* config_file = "config.ini";
+    if (ini_parse(config_file, Application::iniHandler, this) < 0) {
+        spdlog::error("Can't load configuration file: {}", config_file);
+    } else {
+        spdlog::info("Configuration file '{}' loaded successfully.", config_file);
+    }}
 
 // Method to check the integrity of local data
 void Application::checkLocalIntegrity() {
